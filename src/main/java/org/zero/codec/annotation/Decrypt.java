@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
  * @date 2022/11/29
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD,ElementType.PARAMETER})
+@Target({ElementType.METHOD, ElementType.PARAMETER})
 public @interface Decrypt {
+    String key() default "";
 }

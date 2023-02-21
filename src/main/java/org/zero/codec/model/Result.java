@@ -1,5 +1,6 @@
 package org.zero.codec.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.zero.codec.constant.SysError;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,7 +21,7 @@ import java.util.Optional;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Result<T> {
+public class Result<T> implements Serializable {
     private static final long serialVersionUID = 7893804841950761019L;
 
     public static final String OK_MSG = "操作成功";
@@ -49,6 +51,8 @@ public class Result<T> {
     /**
      * 时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Builder.Default
     private LocalDateTime time = LocalDateTime.now();
 
     /**
@@ -56,121 +60,84 @@ public class Result<T> {
      */
     private T data;
 
-    /**
-     * 请求成功
-     */
+    /* ******************************************************** 请求成功 ******************************************************** */
     public static <T> Result<T> ok() {
         return ok(null);
     }
 
-    /**
-     * 请求成功
-     */
     public static <T> Result<T> ok(T data) {
         return ok(OK_MSG, data);
     }
 
-    /**
-     * 请求成功
-     */
     public static <T> Result<T> ok(String msg, T data) {
         return of(HttpStatus.OK, msg, SysError.OK, data);
     }
 
-    /**
-     * 请求成功但不是预期响应
-     */
-    public static <T> Result<T> error(String msg, SysError sysError) {
-        return of(HttpStatus.OK, msg, sysError);
+    /* ******************************************************** 请求成功但不是预期响应 ******************************************************** */
+    public static <T> Result<T> error() {
+        return error(ERROR_MSG);
     }
 
-    /**
-     * 请求成功但不是预期响应
-     */
+    public static <T> Result<T> error(String msg) {
+        return error(msg, SysError.ERROR);
+    }
+
+    public static <T> Result<T> error(String msg, SysError sysError) {
+        return of(HttpStatus.OK, msg, sysError, null);
+    }
+
     public static <T> Result<T> error(String msg, String errorCode, String errorMsg) {
         return of(HttpStatus.OK, msg, errorCode, errorMsg);
     }
 
-    /**
-     * 请求成功但不是预期响应
-     */
     public static <T> Result<T> error(String msg, SysError sysError, T data) {
         return of(HttpStatus.OK, msg, sysError, data);
     }
 
-    /**
-     * 请求成功但不是预期响应
-     */
     public static <T> Result<T> error(String msg, String errorCode, String errorMsg, T data) {
         return of(HttpStatus.OK, msg, errorCode, errorMsg, data);
     }
 
-    /**
-     * 请求失败
-     */
+    public static <T> Result<T> error(T data) {
+        return error(ERROR_MSG, data);
+    }
+
+    public static <T> Result<T> error(String msg, T data) {
+        return of(HttpStatus.OK, msg, SysError.ERROR, data);
+    }
+
+    /* ******************************************************** 请求失败 ******************************************************** */
     public static <T> Result<T> fail() {
         return fail(null);
     }
 
-    /**
-     * 请求失败
-     */
-    public static <T> Result<T> fail(T data) {
-        return fail(ERROR_MSG, data);
-    }
-
-    /**
-     * 请求失败
-     */
     public static <T> Result<T> fail(String msg) {
-        return fail(msg, null);
+        return fail(msg, SysError.ERROR);
     }
 
-    /**
-     * 请求失败
-     */
-    public static <T> Result<T> fail(String msg, T data) {
-        return of(HttpStatus.INTERNAL_SERVER_ERROR, msg, null, data);
+    public static <T> Result<T> fail(String msg, SysError sysError) {
+        return fail(HttpStatus.INTERNAL_SERVER_ERROR, msg, sysError);
     }
 
-    /**
-     * 请求失败
-     */
     public static <T> Result<T> fail(int code, String msg) {
-        return fail(code, msg, null);
+        return fail(code, msg, SysError.ERROR);
     }
 
-    /**
-     * 请求失败
-     */
     public static <T> Result<T> fail(HttpStatus code, String msg) {
-        return fail(code, msg, null);
+        return fail(code, msg, SysError.ERROR);
     }
 
-    /**
-     * 请求失败
-     */
     public static <T> Result<T> fail(int code, String msg, SysError sysError) {
-        return of(code, msg, sysError);
+        return of(code, msg, sysError, null);
     }
 
-    /**
-     * 请求失败
-     */
-    public static <T> Result<T> fail(HttpStatus code, String msg, SysError sysError) {
-        return of(code, msg, sysError);
-    }
-
-    public static <T> Result<T> of(HttpStatus httpStatus, String msg, SysError sysError) {
+    public static <T> Result<T> fail(HttpStatus httpStatus, String msg, SysError sysError) {
         return of(httpStatus, msg, sysError, null);
     }
 
+    /* ******************************************************** 通用构造方法 ******************************************************** */
     public static <T> Result<T> of(HttpStatus httpStatus, String msg, SysError sysError, T data) {
         return of(httpStatus.value(), msg, sysError, data);
-    }
-
-    public static <T> Result<T> of(int code, String msg, SysError sysError) {
-        return of(code, msg, sysError, null);
     }
 
     public static <T> Result<T> of(int code, String msg, SysError sysError, T data) {
@@ -212,5 +179,12 @@ public class Result<T> {
                 .time(time)
                 .data(data)
                 .build();
+    }
+
+    /**
+     * 提供自定义Getter方法，以阻止lombok生成getXXX()方法
+     */
+    public Boolean isSuccess() {
+        return success;
     }
 }

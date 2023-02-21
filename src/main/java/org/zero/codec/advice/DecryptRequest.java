@@ -5,9 +5,11 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAdapter;
 import org.zero.codec.annotation.Decrypt;
+import org.zero.codec.annotation.Encrypt;
 import org.zero.codec.config.CodecProperties;
 import org.zero.codec.util.AesUtil;
 
@@ -16,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 /**
  * @author Zero (cnzeropro@qq.com)
@@ -38,7 +41,8 @@ public class DecryptRequest extends RequestBodyAdviceAdapter {
         InputStream in = inputMessage.getBody();
         byte[] body = new byte[in.available()];
         if (in.read(body) != -1) {
-            byte[] decrypt = AesUtil.decrypt(body, codecProperties.getKey());
+            String key = Optional.ofNullable(parameter.getMethodAnnotation(Encrypt.class)).map(Encrypt::key).filter(StringUtils::hasText).orElse(codecProperties.getKey());
+            byte[] decrypt = AesUtil.decrypt(body, key);
             return new HttpInputMessage() {
                 @Override
                 public InputStream getBody() throws IOException {
